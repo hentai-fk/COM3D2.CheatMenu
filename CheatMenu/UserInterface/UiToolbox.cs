@@ -1,4 +1,6 @@
 ﻿using BepInEx;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
@@ -109,6 +111,12 @@ namespace CheatMenu.UserInterface
 
 			return initialVal;
 		}
+
+		internal static Color ParseColor(string value)
+		{
+            ColorUtility.TryParseHtmlString(value, out var color);
+			return color;
+        }
 
 		internal static Texture2D MakeTex(int width, int height, Color col)
 		{
@@ -226,5 +234,50 @@ namespace CheatMenu.UserInterface
 			result.Apply();
 			return result;
 		}
+
+		internal class DropDownEnum<T>
+        {
+            private static Dictionary<object, bool> dropDownListIndex = new Dictionary<object, bool>();
+
+			internal static T onDropMenuClick(GUIStyle style, object key, string label, T value, Func<T, string> text = null)
+            {
+                GUILayout.BeginVertical(style);
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label(label);
+
+                key = new KeyValuePair<object, object>(key, value);
+                if (!dropDownListIndex.ContainsKey(key))
+                {
+                    dropDownListIndex[key] = false;
+                }
+
+                if (GUILayout.Button(value.ToString(), GUILayout.Width(140)))
+				{
+                    dropDownListIndex[key] = !dropDownListIndex[key];
+                }
+
+                GUILayout.EndHorizontal();
+
+                if (dropDownListIndex[key])
+                {
+                    foreach (var item in Enum.GetNames(typeof(T)))
+                    {
+                        GUILayout.BeginHorizontal();
+                        GUILayout.FlexibleSpace();
+						var text1 = text?.Invoke((T)Enum.Parse(typeof(T), item));
+                        if (GUILayout.Button(text1 == null ? item : item + $" ({text1})", GUI.skin.textArea, GUILayout.MinWidth(140)))
+						{
+                            value = (T) Enum.Parse(typeof(T), item);
+							dropDownListIndex[key] = false;
+                        }
+                        GUILayout.EndHorizontal();
+                    }
+                }
+                GUILayout.EndVertical();
+
+                return value;
+            }
+        }
 	}
 }

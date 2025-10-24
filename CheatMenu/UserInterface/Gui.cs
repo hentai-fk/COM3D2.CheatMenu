@@ -1,6 +1,14 @@
-﻿using System.Runtime.Serialization;
+﻿using BepInEx;
+using HarmonyLib;
 using MaidStatus;
+using System;
+using System.IO;
+using System.Reflection.Emit;
+using System.Runtime.Serialization;
 using UnityEngine;
+using wf;
+using static CheatMenu.UserInterface.UiToolbox;
+using static VRFaceShortcutConfig;
 using Math = System.Math;
 using Status = PlayerStatus.Status;
 
@@ -10,7 +18,7 @@ namespace CheatMenu.UserInterface
 	{
 		private static bool _ranOnce;
 
-		private const int WindowId = 112323718;
+		private const int WindowId = 542876124;
 		internal static Rect WindowRect;
 		private static Rect _dragWindow = new Rect(0, 0, 10000, 20);
 		private static Rect _closeButton = new Rect(0, 0, 25, 15);
@@ -54,21 +62,21 @@ namespace CheatMenu.UserInterface
 				};
 				*/
 
-				normalTexture = UiToolbox.MakeWindowTex(new Color(0, 0, 0, 0.05f), new Color(0, 0, 0, 0.5f));
-				hoverTexture = UiToolbox.MakeWindowTex(new Color(0.3f, 0.3f, 0.3f, 0.3f), new Color(0, 1, 1, 0.5f));
-				onNormalTexture = UiToolbox.MakeWindowTex(new Color(0.3f, 0.3f, 0.3f, 0.6f), new Color(0, 1, 1, 0.5f));
+				normalTexture = UiToolbox.MakeWindowTex(new Color(0, 0, 0, 0.1f), new Color(0, 0, 0, 0.5f));
+				hoverTexture = UiToolbox.MakeWindowTex(new Color(0.3f, 0.3f, 0.3f, 0.6f), new Color(0, 1, 1, 0.5f));
+				onNormalTexture = UiToolbox.MakeWindowTex(new Color(0.3f, 0.3f, 0.3f, 0.8f), new Color(0, 1, 1, 0.5f));
 
 				MainWindow = new GUIStyle(GUI.skin.window)
 				{
 					normal =
 					{
 						background = normalTexture,
-						textColor = new Color(1, 1, 1, 0.05f)
+						textColor = new Color(1, 1, 1, 0.8f)
 					},
 					hover =
 					{
 						background = hoverTexture,
-						textColor = new Color(1, 1, 1, 0.3f)
+						textColor = new Color(1, 1, 1, 0.8f)
 					},
 					onNormal =
 					{
@@ -76,7 +84,7 @@ namespace CheatMenu.UserInterface
 					}
 				};
 
-				sectionsTexture = UiToolbox.MakeTex(2, 2, new Color(0, 0, 0, 0.3f));
+				sectionsTexture = UiToolbox.MakeTex(2, 2, UiToolbox.ParseColor("#1196EE20"));
 
 				Sections = new GUIStyle(GUI.skin.box)
 				{
@@ -86,7 +94,7 @@ namespace CheatMenu.UserInterface
 					}
 				};
 
-				sections2Texture = UiToolbox.MakeTexWithRoundedCorner(new Color(0, 0, 0, 0.8f));
+				sections2Texture = UiToolbox.MakeTexWithRoundedCorner(new Color(0, 0, 0, 0.5f));
 
 				Sections2 = new GUIStyle(GUI.skin.box)
 				{
@@ -112,10 +120,57 @@ namespace CheatMenu.UserInterface
 				_currentWidth = Screen.width;
 			}
 
-			WindowRect = GUILayout.Window(WindowId, WindowRect, GuiWindowControls, "CheatMenu", MainWindow);
+			WindowRect = GUILayout.Window(WindowId, WindowRect, GuiWindowControls, "ExtendCheatMenu", MainWindow);
 		}
 
-		private static void GuiWindowControls(int id)
+		class BBB : BinaryWriter
+		{
+			FileStream _stream;
+            public BBB(FileStream output) : base(output) { _stream = output; }
+			long offset() { return _stream.Position; }
+            public override void Write(bool value)
+            {
+				Console.WriteLine($"wirte offset {offset().ToString("X")} bool {value}");
+                base.Write(value);
+            }
+            public override void Write(byte value)
+            {
+				Console.WriteLine($"wirte offset {offset().ToString("X")} byte {value}");
+                base.Write(value);
+            }
+            public override void Write(sbyte value)
+            {
+				Console.WriteLine($"wirte offset {offset().ToString("X")} sbyte {value}");
+                base.Write(value);
+            }
+            public override void Write(short value)
+            {
+				Console.WriteLine($"wirte offset {offset().ToString("X")} short {value}");
+                base.Write(value);
+            }
+            public override void Write(ushort value)
+            {
+				Console.WriteLine($"wirte offset {offset().ToString("X")} ushort {value}");
+                base.Write(value);
+            }
+            public override void Write(int value)
+            {
+                Console.WriteLine($"wirte offset {offset().ToString("X")} int {value}");
+                base.Write(value);
+            }
+            public override void Write(uint value)
+            {
+                Console.WriteLine($"wirte offset {offset().ToString("X")} int {value}");
+                base.Write(value);
+            }
+            public override void Write(string value)
+            {
+				Console.WriteLine($"wirte offset {offset().ToString("X")} string {value}");
+                base.Write(value);
+            }
+        }
+
+        private static void GuiWindowControls(int id)
 		{
 			_closeButton.x = WindowRect.width - (_closeButton.width + 5);
 			_dragWindow.width = WindowRect.width - (_closeButton.width + 5);
@@ -124,59 +179,103 @@ namespace CheatMenu.UserInterface
 
 			if (GUI.Button(_closeButton, "X"))
 			{
-				CheatMenu.DrawUi = false;
+				ExtendCheatMenu.DrawUi = false;
 			}
 
 			_scrollPosition = GUILayout.BeginScrollView(_scrollPosition);
 
-			GUILayout.BeginVertical();
+            GUILayout.BeginVertical();
 
-			GameMain.instance.CharacterMgr.status.playerName = UiToolbox.LabeledField("Player Name", GameMain.instance.CharacterMgr.status.playerName);
+			GameMain.Instance.CharacterMgr.status.playerName = UiToolbox.LabeledField("Player Name", GameMain.Instance.CharacterMgr.status.playerName);
 
 			GUILayout.BeginHorizontal();
-			GameMain.instance.CharacterMgr.status.money = UiToolbox.NumberField(GameMain.instance.CharacterMgr.status.money, "Money", max: Status.MoneyMax);
+			GameMain.Instance.CharacterMgr.status.money = UiToolbox.NumberField(GameMain.Instance.CharacterMgr.status.money, "Money", max: Status.MoneyMax);
 			GUILayout.FlexibleSpace();
-			GameMain.instance.CharacterMgr.status.clubGauge = UiToolbox.NumberField(GameMain.instance.CharacterMgr.status.clubGauge, "Club Gauge");
+			GameMain.Instance.CharacterMgr.status.clubGauge = UiToolbox.NumberField(GameMain.Instance.CharacterMgr.status.clubGauge, "Club Gauge");
 			GUILayout.FlexibleSpace();
-			GameMain.instance.CharacterMgr.status.clubGrade = UiToolbox.NumberField(GameMain.instance.CharacterMgr.status.clubGrade, "Club Grade", max: Status.ClubGradeMax);
+			GameMain.Instance.CharacterMgr.status.clubGrade = UiToolbox.NumberField(GameMain.Instance.CharacterMgr.status.clubGrade, "Club Grade", max: Status.ClubGradeMax);
 			GUILayout.EndHorizontal();
 
-			if (Trophy.commonIdManager != null && GUILayout.Button("Unlock All Trophies"))
+			var commonIdManager = AccessTools.Field(typeof(Trophy), "commonIdManager").GetValue(null) as CsvCommonIdManager;
+            if (commonIdManager != null && GUILayout.Button("Unlock All Trophies"))
 			{
 				UnlockAllTrophies();
 			}
 
 			if (GameMain.Instance.CharacterMgr.status.lockNTRPlay)
 			{
-				GUILayout.Label("NTR Blocked: Yes (can disable with event)");
-			}
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("NTR 已解锁");
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button("重新变成纯爱仙人"))
+                {
+                    GameMain.Instance.CharacterMgr.status.lockNTRPlay = false;
+                    try
+                    {
+                        DisplayFakeTrophy("我是纯爱仙人");
+                    }
+                    catch { }
+                }
+                GUILayout.EndHorizontal();
+            }
 			else
 			{
 				GUILayout.BeginHorizontal();
-				GUILayout.Label("NTR Blocked: No ಠ_ಠ");
-				if (GUILayout.Button("Block NTR"))
+				GUILayout.Label("NTR 已锁定");
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button("化身为牛头人战士"))
 				{
 					GameMain.Instance.CharacterMgr.status.lockNTRPlay = true;
 					try
 					{
-						DisplayFakeTrophy("A cuck no more");
+						DisplayFakeTrophy("牛头人战士来啦");
 					}
-					catch
-					{
-						//Joke failed. Ignore.
-					}
+					catch {}
 				}
 				GUILayout.EndHorizontal();
 			}
 
-			GUILayout.EndVertical();
+            if (GameMain.Instance.CharacterMgr.status.isOldPlayer)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("即是CM3D2的老板也是现在的老板");
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button("清除在CM3D2俱乐部的记忆"))
+                {
+                    GameMain.Instance.CharacterMgr.status.isOldPlayer = false;
+                    try
+                    {
+                        DisplayFakeTrophy("我是新人");
+                    }
+                    catch { }
+                }
+                GUILayout.EndHorizontal();
+            }
+            else
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("是现在的老板");
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button("继承CM3D2俱乐部记忆"))
+                {
+                    GameMain.Instance.CharacterMgr.status.isOldPlayer = true;
+                    try
+                    {
+                        DisplayFakeTrophy("我是老玩家");
+                    }
+                    catch { }
+                }
+                GUILayout.EndHorizontal();
+            }
+
+            GUILayout.EndVertical();
 
 			GUILayout.BeginVertical(Sections2);
 
-			foreach (var maid in GameMain.instance.CharacterMgr.GetStockMaidList())
+			foreach (var maid in GameMain.Instance.CharacterMgr.GetStockMaidList())
 			{
 				GUILayout.BeginHorizontal(Sections2);
-				GUILayout.Label(maid.status.fullNameEnStyle);
+				GUILayout.Label(maid.status.fullNameJpStyle);
 				GUILayout.FlexibleSpace();
 				if (GUILayout.Button("☰"))
 				{
@@ -189,27 +288,26 @@ namespace CheatMenu.UserInterface
 					continue;
 				}
 
-				GUILayout.BeginHorizontal(Sections);
-				maid.status.firstName = UiToolbox.LabeledField("First Name", maid.status.firstName);
-				maid.status.lastName = UiToolbox.LabeledField("Last Name", maid.status.lastName);
-				maid.status.nickName = UiToolbox.LabeledField("Nickname", maid.status.nickName);
-				maid.status.isNickNameCall = GUILayout.Toggle(maid.status.isNickNameCall, "Use Nickname");
+                GUILayout.BeginHorizontal(Sections);
+                maid.status.lastName = UiToolbox.LabeledField("姓", maid.status.lastName);
+                maid.status.firstName = UiToolbox.LabeledField("名", maid.status.firstName);
+                maid.status.isFirstNameCall = GUILayout.Toggle(maid.status.isFirstNameCall, "称呼名字");
 				GUILayout.EndHorizontal();
 
 				GUILayout.BeginHorizontal(Sections);
-				GUILayout.Label("Trainee: " + (maid.status.studyRate > 500 ? "Yes" : "No" + (maid.status.contract == Contract.Trainee ? " (contract change next morning!)" : string.Empty)));
+				GUILayout.Label("培育完成: " + (maid.status.studyRate > 500 ? "否" : "是" + (maid.status.contract == Contract.Trainee ? " (第二天才开始决定专属和自由女仆!)" : string.Empty)));
 				if (maid.status.studyRate > 500)
 				{
 					GUILayout.FlexibleSpace();
-					if (GUILayout.Button("Complete Training"))
+					if (GUILayout.Button("完成培育"))
 					{
 						maid.status.studyRate = 500;
 					}
 				}
 				GUILayout.EndHorizontal();
 
-				/*
-				GUILayout.BeginHorizontal(Sections);
+
+				/*GUILayout.BeginHorizontal(Sections);
 				if (GUILayout.Button("Max Out Current Job Class"))
 				{
 					maid.status.selectedJobClass.expSystem.SetLevel(maid.status.selectedJobClass.expSystem
@@ -220,37 +318,139 @@ namespace CheatMenu.UserInterface
 					maid.status.selectedYotogiClass.expSystem.SetLevel(maid.status.selectedYotogiClass.expSystem
 						.GetMaxLevel());
 				}
-				GUILayout.EndHorizontal();
-				*/
+				GUILayout.EndHorizontal();*/
 
-				GUILayout.BeginVertical(Sections);
-				maid.status.baseLovely = UiToolbox.NumberField(maid.status.baseLovely, "Lovely", 0, int.MaxValue);
-				maid.status.baseElegance = UiToolbox.NumberField(maid.status.baseElegance, "Elegance", 0, int.MaxValue);
-				maid.status.baseCharm = UiToolbox.NumberField(maid.status.baseCharm, "Charm", 0, int.MaxValue);
-				maid.status.baseCare = UiToolbox.NumberField(maid.status.baseCare, "Care", 0, int.MaxValue);
-				maid.status.baseReception = UiToolbox.NumberField(maid.status.baseReception, "Company", 0, int.MaxValue);
-				maid.status.baseCooking = UiToolbox.NumberField(maid.status.baseCooking, "Cooking", 0, int.MaxValue);
-				maid.status.baseDance = UiToolbox.NumberField(maid.status.baseDance, "Dance", 0, int.MaxValue);
-				maid.status.baseVocal = UiToolbox.NumberField(maid.status.baseVocal, "Vocal", 0, int.MaxValue);
-				//maid.status.playCountNightWork = NumberField(maid.status.playCountNightWork, "Service", 0, int.MaxValue);
+
+				if (maid.status.heroineType == HeroineType.Transfer)
+				{
+					string setMaidFlagName = null;
+					string setManFlagName1 = null;
+					string setManFlagName2 = null;
+					if (maid.status.personal.drawName == "プライドが高く負けず嫌い")
+					{
+						if (maid.status.GetFlag("移籍してきたツンデレ") != 1)
+							setMaidFlagName = "移籍してきたツンデレ";
+                    }
+					else if (maid.status.personal.drawName == "クールで寡黙")
+					{
+                        if (maid.status.GetFlag("移籍してきたクーデレ") != 1)
+                            setMaidFlagName = "移籍してきたクーデレ";
+                    }
+					else if (maid.status.personal.drawName == "純真で健気な妹系")
+					{
+                        if (maid.status.GetFlag("移籍してきた純真") != 1)
+                            setMaidFlagName = "移籍してきた純真";
+                    }
+					else if (maid.status.personal.drawName == "病的な程一途な大和撫子")
+					{
+                        if (maid.status.GetFlag("移籍してきたヤンデレ") != 1)
+                        {
+                            setMaidFlagName = "移籍してきたヤンデレ";
+							if (GameMain.Instance.CharacterMgr.status.GetFlag("ヤンデレ初回移籍") == 0)
+							{
+                                setManFlagName1 = "ヤンデレ初回移籍";
+                                setManFlagName2 = "移籍ヤンデレ未確定";
+                            }
+                        }
+                    }
+					else if (maid.status.personal.drawName == "母性的なお姉ちゃん")
+					{
+                        if (maid.status.GetFlag("移籍してきたお姉ちゃん") != 1)
+                        {
+                            setMaidFlagName = "移籍してきたお姉ちゃん";
+							if (GameMain.Instance.CharacterMgr.status.GetFlag("お姉ちゃん初回移籍") == 0)
+							{
+								setManFlagName1 = "お姉ちゃん初回移籍";
+								setManFlagName2 = "移籍お姉ちゃん未確定";
+                            }
+                        }
+                    }
+					else if (maid.status.personal.drawName == "健康的でスポーティなボクっ娘")
+					{
+                        if (maid.status.GetFlag("移籍してきたボクっ娘") != 1)
+                        {
+                            setMaidFlagName = "移籍してきたボクっ娘";
+							if (GameMain.Instance.CharacterMgr.status.GetFlag("ボクっ娘初回移籍") == 0)
+							{
+								setManFlagName1 = "ボクっ娘初回移籍";
+								setManFlagName2 = "移籍ボクっ娘未確定";
+                            }
+                        }
+                    }
+					else if (maid.status.personal.drawName == "Ｍ心を刺激するドＳ女王様")
+					{
+                        if (maid.status.GetFlag("移籍してきたドＳ") != 1)
+                        {
+                            setMaidFlagName = "移籍してきたドＳ";
+							if (GameMain.Instance.CharacterMgr.status.GetFlag("ドＳ初回移籍") == 0)
+							{
+								setManFlagName1 = "ドＳ初回移籍";
+								setManFlagName2 = "移籍ドＳ未確定";
+                            }
+                        }
+                    }
+                    GUILayout.BeginHorizontal(Sections);
+                    GUILayout.Label("移籍女仆: " + (setMaidFlagName != null ? "否" : "是"));
+                    if (setMaidFlagName != null)
+                    {
+                        if (GUILayout.Button("移籍"))
+                        {
+							maid.status.SetFlag(setMaidFlagName, 1);
+							if (setManFlagName1 != null)
+								GameMain.Instance.CharacterMgr.status.SetFlag(setManFlagName1, 1);
+                            if (setManFlagName2 != null)
+                                GameMain.Instance.CharacterMgr.status.SetFlag(setManFlagName2, 1);
+							if (maid.status.GetFlag("新規雇用旧性格メイド") == 1)
+                                maid.status.SetFlag("新規雇用旧性格メイド", 0);
+                        }
+                    }
+                    GUILayout.EndHorizontal();
+                }
+
+
+				maid.status.relation = DropDownEnum<Relation>.onDropMenuClick(Sections, maid, "普通关系", maid.status.relation);
+                maid.status.additionalRelation = DropDownEnum<AdditionalRelation>.onDropMenuClick(Sections, maid, "额外关系", maid.status.additionalRelation);
+                maid.status.specialRelation = DropDownEnum<SpecialRelation>.onDropMenuClick(Sections, maid, "结婚关系", maid.status.specialRelation);
+                maid.status.contract = DropDownEnum<Contract>.onDropMenuClick(Sections, maid, "契约类型", maid.status.contract);
+                maid.status.initSeikeiken = DropDownEnum<Seikeiken>.onDropMenuClick(Sections, maid, "初始性经验", maid.status.initSeikeiken);
+                maid.status.seikeiken = DropDownEnum<Seikeiken>.onDropMenuClick(Sections, maid, "性经验", maid.status.seikeiken);
+
+
+
+                GUILayout.BeginVertical(Sections);
+                maid.status.likability = UiToolbox.NumberField(maid.status.likability, "好感度", 0, int.MaxValue);
+                maid.status.sexPlayNumberOfPeople = UiToolbox.NumberField(maid.status.sexPlayNumberOfPeople, "SEX经验人数", 0, int.MaxValue);
+                GUILayout.EndVertical();
+
+                GUILayout.BeginVertical(Sections);
+				maid.status.baseLovely = UiToolbox.NumberField(maid.status.baseLovely, "可爱", 0, int.MaxValue);
+				maid.status.baseElegance = UiToolbox.NumberField(maid.status.baseElegance, "气质", 0, int.MaxValue);
+				maid.status.baseCharm = UiToolbox.NumberField(maid.status.baseCharm, "魅惑", 0, int.MaxValue);
+				maid.status.baseCare = UiToolbox.NumberField(maid.status.baseCare, "侍奉", 0, int.MaxValue);
+				maid.status.baseReception = UiToolbox.NumberField(maid.status.baseReception, "招待", 0, int.MaxValue);
+				maid.status.baseCooking = UiToolbox.NumberField(maid.status.baseCooking, "料理", 0, int.MaxValue);
+				maid.status.baseDance = UiToolbox.NumberField(maid.status.baseDance, "舞蹈", 0, int.MaxValue);
+				maid.status.baseVocal = UiToolbox.NumberField(maid.status.baseVocal, "声乐", 0, int.MaxValue);
+				maid.status.playCountNightWork = UiToolbox.NumberField(maid.status.playCountNightWork, "接客次数", 0, int.MaxValue);
 				GUILayout.EndVertical();
 
-				/*
 				GUILayout.BeginVertical(Sections);
-				//maid.status.baseTeachRate = UiToolbox.NumberField(maid.status.baseTeachRate, "Teach Rate", 0, int.MaxValue);
+				maid.status.baseTeachRate = UiToolbox.NumberField(maid.status.baseTeachRate, "指导率", 0, int.MaxValue);
+				maid.status.studyRate = UiToolbox.NumberField(maid.status.studyRate, "学习率(不大于500时表示培育完成)", 0, int.MaxValue);
 				GUILayout.EndVertical();
-				*/
 
 				GUILayout.BeginVertical(Sections);
-				maid.status.likability = UiToolbox.NumberField(maid.status.likability, "Favor", 0, int.MaxValue);
-				maid.status.baseMaxHp = UiToolbox.NumberField(maid.status.baseMaxHp, "Energy", 0, int.MaxValue);
-				maid.status.baseMaxMind = UiToolbox.NumberField(maid.status.baseMaxMind, "Mind", 0, int.MaxValue);
-				maid.status.baseMaxReason = UiToolbox.NumberField(maid.status.baseMaxReason, "Reason", 0, int.MaxValue);
-				maid.status.baseInyoku = UiToolbox.NumberField(maid.status.baseInyoku, "Lust", 0, int.MaxValue);
-				maid.status.baseMvalue = UiToolbox.NumberField(maid.status.baseMvalue, "Masochism", 0, int.MaxValue);
-				maid.status.baseHentai = UiToolbox.NumberField(maid.status.baseHentai, "Hentai", 0, int.MaxValue);
-				maid.status.baseHousi = UiToolbox.NumberField(maid.status.baseHousi, "Service", 0, int.MaxValue);
-				//maid.status.playCountYotogi = NumberField(maid.status.playCountYotogi, "Yotogis", 0, int.MaxValue);
+				maid.status.baseMaxHp = UiToolbox.NumberField(maid.status.baseMaxHp, "体力", 0, int.MaxValue);
+				maid.status.baseMaxMind = UiToolbox.NumberField(maid.status.baseMaxMind, "精神", 0, int.MaxValue);
+				maid.status.baseInyoku = UiToolbox.NumberField(maid.status.baseInyoku, "淫欲", 0, int.MaxValue);
+				maid.status.baseMvalue = UiToolbox.NumberField(maid.status.baseMvalue, "M性", 0, int.MaxValue);
+				maid.status.baseHentai = UiToolbox.NumberField(maid.status.baseHentai, "变态", 0, int.MaxValue);
+				maid.status.baseHousi = UiToolbox.NumberField(maid.status.baseHousi, "侍奉", 0, int.MaxValue);
+				maid.status.playCountYotogi = UiToolbox.NumberField(maid.status.playCountYotogi, "夜伽次数", 0, int.MaxValue);
+				GUILayout.EndVertical();
+
+				GUILayout.BeginVertical(Sections);
+				maid.status.baseAppealPoint = UiToolbox.NumberField(maid.status.baseAppealPoint, "AP(魅力展示)", 0, int.MaxValue);
 				GUILayout.EndVertical();
 			}
 
@@ -258,7 +458,7 @@ namespace CheatMenu.UserInterface
 
 			GUILayout.EndScrollView();
 
-			UiToolbox.ChkMouseClick(WindowRect, ref CheatMenu.DrawUi);
+			UiToolbox.ChkMouseClick(WindowRect, ref ExtendCheatMenu.DrawUi);
 		}
 
 		public static void UnlockAllTrophies()
@@ -289,7 +489,7 @@ namespace CheatMenu.UserInterface
 
 			if (trophy == null)
 			{
-				CheatMenu.PluginLogger.LogWarning("Trophy fail :(");
+				ExtendCheatMenu.PluginLogger.LogWarning("Trophy fail :(");
 				return;
 			}
 
