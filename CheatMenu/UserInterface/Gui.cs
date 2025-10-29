@@ -2,7 +2,9 @@
 using HarmonyLib;
 using MaidStatus;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection.Emit;
 using System.Runtime.Serialization;
 using UnityEngine;
@@ -109,14 +111,14 @@ namespace CheatMenu.UserInterface
 
 			//Sometimes the UI can be improperly sized, this sets it to some measurements.
 			if (_currentHeight != Screen.height || _currentWidth != Screen.width)
-			{
-				WindowRect.height = Math.Max(Screen.height / 2f, 540);
-				WindowRect.width = Math.Max(Screen.width / 4f, 270);
+            {
+                WindowRect.width = Math.Min(Screen.width * 0.8f, 600);
+                WindowRect.height = Math.Min(Screen.height * 0.8f, 1000);
 
-				WindowRect.y = Screen.height / 4f;
-				WindowRect.x = Screen.width / 3f;
+                WindowRect.x = (Screen.width - WindowRect.width) / 2;
+                WindowRect.y = (Screen.height - WindowRect.height) / 2;
 
-				_currentHeight = Screen.height;
+                _currentHeight = Screen.height;
 				_currentWidth = Screen.width;
 			}
 
@@ -186,23 +188,27 @@ namespace CheatMenu.UserInterface
 
             GUILayout.BeginVertical();
 
-			GameMain.Instance.CharacterMgr.status.playerName = UiToolbox.LabeledField("Player Name", GameMain.Instance.CharacterMgr.status.playerName);
+			GameMain.Instance.CharacterMgr.status.playerName = UiToolbox.LabeledField("玩家名字", GameMain.Instance.CharacterMgr.status.playerName);
 
 			GUILayout.BeginHorizontal();
-			GameMain.Instance.CharacterMgr.status.money = UiToolbox.NumberField(GameMain.Instance.CharacterMgr.status.money, "Money", max: Status.MoneyMax);
+			GameMain.Instance.CharacterMgr.status.money = UiToolbox.NumberField(GameMain.Instance.CharacterMgr.status.money, "金钱", max: Status.MoneyMax);
 			GUILayout.FlexibleSpace();
-			GameMain.Instance.CharacterMgr.status.clubGauge = UiToolbox.NumberField(GameMain.Instance.CharacterMgr.status.clubGauge, "Club Gauge");
+			GameMain.Instance.CharacterMgr.status.clubGauge = UiToolbox.NumberField(GameMain.Instance.CharacterMgr.status.clubGauge, "俱乐部计量槽");
 			GUILayout.FlexibleSpace();
-			GameMain.Instance.CharacterMgr.status.clubGrade = UiToolbox.NumberField(GameMain.Instance.CharacterMgr.status.clubGrade, "Club Grade", max: Status.ClubGradeMax);
+			GameMain.Instance.CharacterMgr.status.clubGrade = UiToolbox.NumberField(GameMain.Instance.CharacterMgr.status.clubGrade, "俱乐部等级", max: Status.ClubGradeMax);
 			GUILayout.EndHorizontal();
 
-			var commonIdManager = AccessTools.Field(typeof(Trophy), "commonIdManager").GetValue(null) as CsvCommonIdManager;
-            if (commonIdManager != null && GUILayout.Button("Unlock All Trophies"))
+            GUILayout.BeginHorizontal();
+
+            var commonIdManager = AccessTools.Field(typeof(Trophy), "commonIdManager").GetValue(null) as CsvCommonIdManager;
+            if (commonIdManager != null && GUILayout.Button("获得所有奖杯"))
 			{
 				UnlockAllTrophies();
 			}
 
-			if (GameMain.Instance.CharacterMgr.status.lockNTRPlay)
+            GUILayout.EndHorizontal();
+
+            if (GameMain.Instance.CharacterMgr.status.lockNTRPlay)
 			{
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("NTR 已解锁");
@@ -210,11 +216,7 @@ namespace CheatMenu.UserInterface
                 if (GUILayout.Button("重新变成纯爱仙人"))
                 {
                     GameMain.Instance.CharacterMgr.status.lockNTRPlay = false;
-                    try
-                    {
-                        DisplayFakeTrophy("我是纯爱仙人");
-                    }
-                    catch { }
+                    DisplayFakeTrophy("我是纯爱仙人");
                 }
                 GUILayout.EndHorizontal();
             }
@@ -226,12 +228,8 @@ namespace CheatMenu.UserInterface
                 if (GUILayout.Button("化身为牛头人战士"))
 				{
 					GameMain.Instance.CharacterMgr.status.lockNTRPlay = true;
-					try
-					{
-						DisplayFakeTrophy("牛头人战士来啦");
-					}
-					catch {}
-				}
+                    DisplayFakeTrophy("牛头人战士来啦");
+                }
 				GUILayout.EndHorizontal();
 			}
 
@@ -243,11 +241,7 @@ namespace CheatMenu.UserInterface
                 if (GUILayout.Button("清除在CM3D2俱乐部的记忆"))
                 {
                     GameMain.Instance.CharacterMgr.status.isOldPlayer = false;
-                    try
-                    {
-                        DisplayFakeTrophy("我是新人");
-                    }
-                    catch { }
+                    DisplayFakeTrophy("我是新人");
                 }
                 GUILayout.EndHorizontal();
             }
@@ -259,11 +253,7 @@ namespace CheatMenu.UserInterface
                 if (GUILayout.Button("继承CM3D2俱乐部记忆"))
                 {
                     GameMain.Instance.CharacterMgr.status.isOldPlayer = true;
-                    try
-                    {
-                        DisplayFakeTrophy("我是老玩家");
-                    }
-                    catch { }
+                    DisplayFakeTrophy("我是老玩家");
                 }
                 GUILayout.EndHorizontal();
             }
@@ -290,7 +280,9 @@ namespace CheatMenu.UserInterface
 
                 GUILayout.BeginHorizontal(Sections);
                 maid.status.lastName = UiToolbox.LabeledField("姓", maid.status.lastName);
+				GUILayout.FlexibleSpace();
                 maid.status.firstName = UiToolbox.LabeledField("名", maid.status.firstName);
+                GUILayout.FlexibleSpace();
                 maid.status.isFirstNameCall = GUILayout.Toggle(maid.status.isFirstNameCall, "称呼名字");
 				GUILayout.EndHorizontal();
 
@@ -323,6 +315,7 @@ namespace CheatMenu.UserInterface
 
 				if (maid.status.heroineType == HeroineType.Transfer)
 				{
+					// script/iseki_0001.ks
 					string setMaidFlagName = null;
 					string setManFlagName1 = null;
 					string setManFlagName2 = null;
@@ -408,13 +401,22 @@ namespace CheatMenu.UserInterface
                 }
 
 
-				maid.status.relation = DropDownEnum<Relation>.onDropMenuClick(Sections, maid, "普通关系", maid.status.relation);
-                maid.status.additionalRelation = DropDownEnum<AdditionalRelation>.onDropMenuClick(Sections, maid, "额外关系", maid.status.additionalRelation);
-                maid.status.specialRelation = DropDownEnum<SpecialRelation>.onDropMenuClick(Sections, maid, "结婚关系", maid.status.specialRelation);
-                maid.status.contract = DropDownEnum<Contract>.onDropMenuClick(Sections, maid, "契约类型", maid.status.contract);
-                maid.status.initSeikeiken = DropDownEnum<Seikeiken>.onDropMenuClick(Sections, maid, "初始性经验", maid.status.initSeikeiken);
-                maid.status.seikeiken = DropDownEnum<Seikeiken>.onDropMenuClick(Sections, maid, "性经验", maid.status.seikeiken);
+				maid.status.relation = DropDownEnum<Relation>.onDropMenuClick(Sections, maid, "普通关系", maid.status.relation, a => EnumConvert.GetString(a));
+                maid.status.additionalRelation = DropDownEnum<AdditionalRelation>.onDropMenuClick(Sections, maid, "额外关系", maid.status.additionalRelation, a => EnumConvert.GetString(a));
+				maid.status.specialRelation = DropDownEnum<SpecialRelation>.onDropMenuClick(Sections, maid, "结婚关系", maid.status.specialRelation, a => EnumConvert.GetString(a));
+				maid.status.contract = DropDownEnum<Contract>.onDropMenuClick(Sections, maid, "契约类型", maid.status.contract, a => EnumConvert.GetString(a));
+				maid.status.initSeikeiken = DropDownEnum<Seikeiken>.onDropMenuClick(Sections, maid, "初始性经验", maid.status.initSeikeiken, a => EnumConvert.GetString(a));
+				maid.status.seikeiken = DropDownEnum<Seikeiken>.onDropMenuClick(Sections, maid, "性经验", maid.status.seikeiken, a => EnumConvert.GetString(a));
 
+
+                var propensity = Traverse.Create(maid.status).Field("propensitys_").GetValue() as Dictionary<int, Propensity.Data>;
+                DropDownList<int, string>.onDropMenuClick(Sections, maid, Propensity.GetAllDatas(true).ToDictionary(a => a.id, b => b.drawName), propensity.Keys, "性癖", (key, add) =>
+				{
+					if (add)
+                        maid.status.AddPropensity(key);
+					else
+						maid.status.RemovePropensity(key);
+                });
 
 
                 GUILayout.BeginVertical(Sections);
@@ -473,31 +475,38 @@ namespace CheatMenu.UserInterface
 
 		public static void DisplayFakeTrophy(string trophyText, string shopItem = "")
 		{
-			var gameObject = GameObject.Find("SystemUI Root/TrophyAchieveEffect");
-			if (gameObject == null)
+			try
 			{
-				return;
-			}
+                var gameObject = GameObject.Find("SystemUI Root/TrophyAchieveEffect");
+                if (gameObject == null)
+                {
+                    return;
+                }
 
-			var component = gameObject.GetComponent<TrophyAchieveEffect>();
-			if (component == null)
+                var component = gameObject.GetComponent<TrophyAchieveEffect>();
+                if (component == null)
+                {
+                    return;
+                }
+
+                var trophy = FormatterServices.GetUninitializedObject(typeof(Trophy.Data)) as Trophy.Data;
+                if (trophy == null)
+                {
+                    ExtendCheatMenu.PluginLogger.LogWarning("Trophy fail: GetUninitializedObject");
+                    return;
+                }
+
+                typeof(Trophy.Data).GetField(nameof(Trophy.Data.rarity)).SetValue(trophy, 3);
+                typeof(Trophy.Data).GetField(nameof(Trophy.Data.name)).SetValue(trophy, trophyText);
+                typeof(Trophy.Data).GetField(nameof(Trophy.Data.effectDrawItemName)).SetValue(trophy, shopItem);
+
+				(Traverse.Create(component).Field("trophy_data_list_").GetValue() as List<Trophy.Data>).Insert(0, trophy);
+                Traverse.Create(component).Field("state_").SetValue(Enum.Parse(AccessTools.TypeByName("TrophyAchieveEffect+State"), "Null"));
+            }
+			catch (Exception ex)
 			{
-				return;
-			}
-
-			var trophy = FormatterServices.GetUninitializedObject(typeof(Trophy.Data)) as Trophy.Data;
-
-			if (trophy == null)
-			{
-				ExtendCheatMenu.PluginLogger.LogWarning("Trophy fail :(");
-				return;
-			}
-
-			typeof(Trophy.Data).GetField(nameof(Trophy.Data.rarity)).SetValue(trophy, 3);
-			typeof(Trophy.Data).GetField(nameof(Trophy.Data.name)).SetValue(trophy, trophyText);
-			typeof(Trophy.Data).GetField(nameof(Trophy.Data.effectDrawItemName)).SetValue(trophy, shopItem);
-
-			component.EffectStart(trophy);
+                ExtendCheatMenu.PluginLogger.LogWarning("Trophy fail: " + ex);
+            }
 		}
 	}
 }

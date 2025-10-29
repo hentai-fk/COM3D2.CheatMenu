@@ -1,5 +1,7 @@
 ﻿using BepInEx;
+using MaidStatus;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -31,7 +33,7 @@ namespace CheatMenu.UserInterface
 		{
 			GUILayout.BeginHorizontal();
 			GUILayout.Label(label);
-			value = GUILayout.TextField(value);
+			value = GUILayout.TextField(value, GUILayout.MinWidth(50));
 			GUILayout.EndHorizontal();
 			return value;
 		}
@@ -239,20 +241,20 @@ namespace CheatMenu.UserInterface
         {
             private static Dictionary<object, bool> dropDownListIndex = new Dictionary<object, bool>();
 
-			internal static T onDropMenuClick(GUIStyle style, object key, string label, T value, Func<T, string> text = null)
+			internal static T onDropMenuClick(GUIStyle style, object key, string label, T value, Func<T,string> getText)
             {
                 GUILayout.BeginVertical(style);
 
                 GUILayout.BeginHorizontal();
                 GUILayout.Label(label);
 
-                key = new KeyValuePair<object, object>(key, value);
+                key = new KeyValuePair<object, object>(key, label);
                 if (!dropDownListIndex.ContainsKey(key))
                 {
                     dropDownListIndex[key] = false;
                 }
 
-                if (GUILayout.Button(value.ToString(), GUILayout.Width(140)))
+                if (GUILayout.Button(ScriptManager.ReplaceCharaName(getText(value)), GUILayout.Width(140)))
 				{
                     dropDownListIndex[key] = !dropDownListIndex[key];
                 }
@@ -261,17 +263,16 @@ namespace CheatMenu.UserInterface
 
                 if (dropDownListIndex[key])
                 {
-                    foreach (var item in Enum.GetNames(typeof(T)))
+                    foreach (T item in Enum.GetValues(typeof(T)))
                     {
                         GUILayout.BeginHorizontal();
                         GUILayout.FlexibleSpace();
-						var text1 = text?.Invoke((T)Enum.Parse(typeof(T), item));
-                        if (GUILayout.Button(text1 == null ? item : item + $" ({text1})", GUI.skin.textArea, GUILayout.MinWidth(140)))
+                        if (GUILayout.Button(ScriptManager.ReplaceCharaName(getText(item)), GUI.skin.textArea, GUILayout.MinWidth(140)))
 						{
-                            value = (T) Enum.Parse(typeof(T), item);
+							value = item;
 							dropDownListIndex[key] = false;
-                        }
-                        GUILayout.EndHorizontal();
+						}
+						GUILayout.EndHorizontal();
                     }
                 }
                 GUILayout.EndVertical();
@@ -279,5 +280,47 @@ namespace CheatMenu.UserInterface
                 return value;
             }
         }
-	}
+
+        internal class DropDownList<Key, Value>
+        {
+            private static Dictionary<object, bool> dropDownListIndex = new Dictionary<object, bool>();
+
+            internal static void onDropMenuClick(GUIStyle style, object key, IDictionary<Key, Value> allValues, IEnumerable<Key> nowValue, string label, Action<Key, bool> isAdd)
+            {
+                GUILayout.BeginVertical(style);
+
+                GUILayout.BeginHorizontal();
+                GUILayout.Label(label);
+
+                var keyV = new KeyValuePair<object, object>(key, label);
+                if (!dropDownListIndex.ContainsKey(key))
+                {
+                    dropDownListIndex[key] = false;
+                }
+
+                if (GUILayout.Button(label, GUILayout.Width(140)))
+                {
+                    dropDownListIndex[key] = !dropDownListIndex[key];
+                }
+
+                GUILayout.EndHorizontal();
+
+                if (dropDownListIndex[key])
+                {
+                    foreach (var item in allValues)
+                    {
+                        GUILayout.BeginHorizontal();
+                        GUILayout.FlexibleSpace();
+						var isNow = nowValue.Contains(item.Key);
+						if (isNow != GUILayout.Toggle(isNow, ScriptManager.ReplaceCharaName(item.Value.ToString()), GUILayout.MinWidth(140)))
+						{
+							isAdd(item.Key, !isNow);
+                        }
+                        GUILayout.EndHorizontal();
+                    }
+                }
+                GUILayout.EndVertical();
+            }
+        }
+    }
 }
