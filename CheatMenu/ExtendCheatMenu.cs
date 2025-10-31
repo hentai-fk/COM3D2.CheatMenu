@@ -27,7 +27,6 @@ namespace CheatMenu
 
 		private void Awake()
         {
-            Console.WriteLine("aaaa0");
             //Useful for engaging co-routines or accessing variables non-static variables. Completely optional though.
             Instance = this;
 

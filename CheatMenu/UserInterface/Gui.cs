@@ -260,7 +260,43 @@ namespace CheatMenu.UserInterface
 
             GUILayout.EndVertical();
 
-			GUILayout.BeginVertical(Sections2);
+            GUILayout.BeginVertical(Sections2);
+            GUILayout.BeginHorizontal(Sections2);
+            GUILayout.Label("修改设施等级");
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("☰"))
+            {
+                _currentGuid = _currentGuid == "设施等级" ? string.Empty : "设施等级";
+            }
+            GUILayout.EndHorizontal();
+            if (_currentGuid == "设施等级")
+			{
+                for (int i = 0; i < GameMain.Instance.FacilityMgr.FacilityCountMax; i++)
+                {
+					var fac1 = GameMain.Instance.FacilityMgr.GetFacility(i);
+					var fac2 = GameMain.Instance.FacilityMgr.GetNextDayFacility(i);
+					foreach (var fac in new[] { fac1, fac2 })
+					{
+						if (fac == null)
+							continue;
+                        GUILayout.BeginHorizontal(Sections2);
+                        GUILayout.Label(ScriptManager.ReplaceCharaName(fac.facilityName) + ": " + fac.facilityLevel);
+                        GUILayout.FlexibleSpace();
+						if (GUILayout.Button("-", GUILayout.MinWidth(24)))
+						{
+							fac.expSystem.SetLevel(fac.facilityLevel - 1);
+                        }
+						if (GUILayout.Button("+", GUILayout.MinWidth(24)))
+						{
+							fac.expSystem.SetLevel(fac.facilityLevel + 1);
+                        }
+                        GUILayout.EndHorizontal();
+                    }
+                }
+            }
+            GUILayout.EndVertical();
+
+            GUILayout.BeginVertical(Sections2);
 
 			foreach (var maid in GameMain.Instance.CharacterMgr.GetStockMaidList())
 			{
