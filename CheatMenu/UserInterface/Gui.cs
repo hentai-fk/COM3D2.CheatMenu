@@ -279,7 +279,7 @@ namespace CheatMenu.UserInterface
 					{
 						if (fac == null)
 							continue;
-                        GUILayout.BeginHorizontal(Sections2);
+                        GUILayout.BeginHorizontal(Sections);
                         GUILayout.Label(ScriptManager.ReplaceCharaName(fac.facilityName) + ": " + fac.facilityLevel);
                         GUILayout.FlexibleSpace();
 						if (GUILayout.Button("-", GUILayout.MinWidth(24)))
