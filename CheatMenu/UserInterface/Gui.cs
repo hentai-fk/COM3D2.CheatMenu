@@ -11,6 +11,7 @@ using System.Runtime.Serialization;
 using UnityEngine;
 using wf;
 using static CheatMenu.UserInterface.UiToolbox;
+using static Schedule.ScheduleCSVData;
 using static VRFaceShortcutConfig;
 using Math = System.Math;
 using Status = PlayerStatus.Status;
@@ -469,23 +470,26 @@ namespace CheatMenu.UserInterface
                 });
 
 
-                GUILayout.BeginHorizontal(Sections);
-                GUILayout.Label("修改训练次数");
-                GUILayout.FlexibleSpace();
-                if (GUILayout.Button("☰"))
+				if (maid.status.heroineType != HeroineType.Sub)
                 {
-                    _currentWorkType = _currentWorkType == "训练次数" ? string.Empty : "训练次数";
-                }
-                GUILayout.EndHorizontal();
-				if (_currentWorkType == "训练次数")
-				{
-					foreach (var item in ScheduleCSVData.TrainingData)
-					{
-						if (!maid.status.workDatas.ContainsKey(item.Key))
-							maid.status.SetWorkDataLevel(item.Key, 0);
-                        GUILayout.BeginVertical(Sections3);
-                        maid.status.workDatas[item.Key].playCount = (uint)UiToolbox.NumberField(maid.status.workDatas[item.Key].playCount, ScriptManager.ReplaceCharaName(item.Value.name), 0, int.MaxValue);
-                        GUILayout.EndVertical();
+                    GUILayout.BeginHorizontal(Sections);
+                    GUILayout.Label("修改训练次数");
+                    GUILayout.FlexibleSpace();
+                    if (GUILayout.Button("☰"))
+                    {
+                        _currentWorkType = _currentWorkType == "训练次数" ? string.Empty : "训练次数";
+                    }
+                    GUILayout.EndHorizontal();
+                    if (_currentWorkType == "训练次数")
+                    {
+                        foreach (var item in ScheduleCSVData.TrainingData)
+                        {
+                            if (!maid.status.workDatas.ContainsKey(item.Key))
+                                maid.status.SetWorkDataLevel(item.Key, 0);
+                            GUILayout.BeginVertical(Sections3);
+                            maid.status.workDatas[item.Key].playCount = (uint)UiToolbox.NumberField(maid.status.workDatas[item.Key].playCount, ScriptManager.ReplaceCharaName(item.Value.name) + item.Key, 0, int.MaxValue);
+                            GUILayout.EndVertical();
+                        }
                     }
                 }
 
@@ -500,8 +504,10 @@ namespace CheatMenu.UserInterface
                 if (_currentWorkType == "工作次数")
                 {
 					foreach (var item in ScheduleCSVData.WorkData)
-					{
-						if (!maid.status.workDatas.ContainsKey(item.Key))
+                    {
+                        if (!PersonalEventBlocker.IsEnabledScheduleTask(maid.status.personal, -1) || item.Key == ScheduleCSVData.faclilityPowerUpWorkId)
+                            continue;
+                        if (!maid.status.workDatas.ContainsKey(item.Key))
 							maid.status.SetWorkDataLevel(item.Key, 0);
                         GUILayout.BeginVertical(Sections3);
                         maid.status.workDatas[item.Key].playCount = (uint)UiToolbox.NumberField(maid.status.workDatas[item.Key].playCount, ScriptManager.ReplaceCharaName(item.Value.name), 0, int.MaxValue);
