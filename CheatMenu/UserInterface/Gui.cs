@@ -1,6 +1,7 @@
 ﻿using BepInEx;
 using HarmonyLib;
 using MaidStatus;
+using Schedule;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -31,17 +32,20 @@ namespace CheatMenu.UserInterface
 		private static Texture2D onNormalTexture;
 		private static Texture2D sectionsTexture;
 		private static Texture2D sections2Texture;
+		private static Texture2D sections3Texture;
 
 		//internal static GUIStyle Separator;
 		internal static GUIStyle MainWindow;
 
 		internal static GUIStyle Sections;
 		internal static GUIStyle Sections2;
+		internal static GUIStyle Sections3;
 
 		private static int _currentHeight;
 		private static int _currentWidth;
 
 		private static string _currentGuid = string.Empty;
+		private static string _currentWorkType = string.Empty;
 
 		internal static void StartGui()
 		{
@@ -103,6 +107,16 @@ namespace CheatMenu.UserInterface
 					normal =
 					{
 						background = sections2Texture
+					}
+				};
+
+                sections3Texture = UiToolbox.MakeTex(2, 2, UiToolbox.ParseColor("#00aed836"));
+
+                Sections3 = new GUIStyle(GUI.skin.box)
+				{
+					normal =
+					{
+						background = sections3Texture
 					}
 				};
 
@@ -453,6 +467,47 @@ namespace CheatMenu.UserInterface
 					else
 						maid.status.RemovePropensity(key);
                 });
+
+
+                GUILayout.BeginHorizontal(Sections);
+                GUILayout.Label("修改训练次数");
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button("☰"))
+                {
+                    _currentWorkType = _currentWorkType == "训练次数" ? string.Empty : "训练次数";
+                }
+                GUILayout.EndHorizontal();
+				if (_currentWorkType == "训练次数")
+				{
+					foreach (var item in ScheduleCSVData.TrainingData)
+					{
+						if (!maid.status.workDatas.ContainsKey(item.Key))
+							maid.status.SetWorkDataLevel(item.Key, 0);
+                        GUILayout.BeginVertical(Sections3);
+                        maid.status.workDatas[item.Key].playCount = (uint)UiToolbox.NumberField(maid.status.workDatas[item.Key].playCount, ScriptManager.ReplaceCharaName(item.Value.name), 0, int.MaxValue);
+                        GUILayout.EndVertical();
+                    }
+                }
+
+                GUILayout.BeginHorizontal(Sections);
+                GUILayout.Label("修改工作次数");
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button("☰"))
+                {
+                    _currentWorkType = _currentWorkType == "工作次数" ? string.Empty : "工作次数";
+                }
+                GUILayout.EndHorizontal();
+                if (_currentWorkType == "工作次数")
+                {
+					foreach (var item in ScheduleCSVData.WorkData)
+					{
+						if (!maid.status.workDatas.ContainsKey(item.Key))
+							maid.status.SetWorkDataLevel(item.Key, 0);
+                        GUILayout.BeginVertical(Sections3);
+                        maid.status.workDatas[item.Key].playCount = (uint)UiToolbox.NumberField(maid.status.workDatas[item.Key].playCount, ScriptManager.ReplaceCharaName(item.Value.name), 0, int.MaxValue);
+                        GUILayout.EndVertical();
+                    }
+                }
 
 
                 GUILayout.BeginVertical(Sections);

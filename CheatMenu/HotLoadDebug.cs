@@ -1,7 +1,11 @@
 ﻿using FacilityFlag;
 using HarmonyLib;
+using Schedule;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
+using static System.Collections.Specialized.BitVector32;
+using static VRFaceShortcutConfig;
 
 namespace CheatMenu
 {
@@ -21,29 +25,19 @@ namespace CheatMenu
 
             try
             {
-                //Traverse.Create(GameMain.Instance.FacilityMgr).Field("FacilityCountMax").SetValue(12);
-                //foreach (var item in GameMain.Instance.FacilityMgr.GetFacilityArray())
-                //{
-                //    ExtendCheatMenu.PluginLogger.LogInfo("facilityName: " + ScriptManager.ReplaceCharaName(item.facilityName));
-                //    ExtendCheatMenu.PluginLogger.LogInfo("facilityLevel: " + item.facilityLevel);
-                //    ExtendCheatMenu.PluginLogger.LogInfo("facilityIncome: " + item.facilityIncome);
-                //    ExtendCheatMenu.PluginLogger.LogInfo("facilityExperienceValue: " + item.facilityExperienceValue);
-                //    ExtendCheatMenu.PluginLogger.LogInfo("facilityValuation: " + item.facilityValuation);
-                //    ExtendCheatMenu.PluginLogger.LogInfo("GetCurrentExp: " + item.expSystem.GetCurrentExp());
-                //    ExtendCheatMenu.PluginLogger.LogInfo("GetCurrentLevel: " + item.expSystem.GetCurrentLevel());
-                //    ExtendCheatMenu.PluginLogger.LogInfo("GetMaxLevel: " + item.expSystem.GetMaxLevel());
-                //    ExtendCheatMenu.PluginLogger.LogInfo("GetMaxLevelNeedExp: " + item.expSystem.GetMaxLevelNeedExp());
-                //    item.expSystem.AddExp(100);
-                //}
-                foreach (var item in FacilityDataTable.GetAllWorkData(false))
+                foreach (var item in ScheduleCSVData.AllData)
                 {
-                    //Console.WriteLine("设施 " + ScriptManager.ReplaceCharaName(item.Value.name));
-                    //Console.WriteLine("item.Key " + item.Key);
-                    //var exp = GameMain.Instance.FacilityMgr.GetFacilityExpSystem(item.Key);
-                    //Console.WriteLine("GetCurrentLevel " + exp.GetCurrentLevel());
-                    //Console.WriteLine("GetCurrentExp " + exp.GetCurrentExp());
-                    //Console.WriteLine("GetMaxLevel " + exp.GetMaxLevel());
-                    //Console.WriteLine("GetMaxLevelNeedExp " + exp.GetMaxLevelNeedExp());
+                    if (item.Value.type == ScheduleTaskCtrl.TaskType.Work)
+                    {
+                        Console.WriteLine($"Key " + item.Key);
+                        Console.WriteLine($"name " + ScriptManager.ReplaceCharaName(item.Value.name));
+                        Console.WriteLine($"isCommu " + item.Value.isCommu);
+                        Console.WriteLine($"IsCommon " + item.Value.IsCommon);
+                        Console.WriteLine($"information " + item.Value.information);
+                        Console.WriteLine($"IsLegacy " + item.Value.IsLegacy);
+                        Console.WriteLine($"isNewBodyBlock " + item.Value.isNewBodyBlock);
+                        Console.WriteLine($"mode " + item.Value.mode);
+                    }
                 }
             }
             catch (Exception ex)
