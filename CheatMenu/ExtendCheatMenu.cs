@@ -9,7 +9,7 @@ using UnityEngine;
 namespace CheatMenu
 {
 	//This is the metadata set for your plugin.
-	[BepInPlugin("COM3D2.ExtendCheatMenu", "ExtendCheatMenu", "1.3")]
+	[BepInPlugin("COM3D2.ExtendCheatMenu", "ExtendCheatMenu", "1.4")]
 	public class ExtendCheatMenu : BaseUnityPlugin
 	{
 		//static saving of the main instance. This makes it easier to run stuff like co-routines from static methods or accessing non-static vars.
